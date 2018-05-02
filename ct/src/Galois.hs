@@ -10,6 +10,13 @@ import NumericPrelude
 import Algebra.Field
 import Algebra.Additive
 import Algebra.Ring
+import Algebra.ZeroTestable
+import MathObj.Polynomial
+import Data.Maybe
+import Data.Ix
+import Data.Foldable
+import Data.String
+import Data.List
 
 -- GF(p) instances
 data PrimeFieldElement (p :: Nat) where
@@ -26,8 +33,8 @@ data G2 = E0
         | E1
         deriving (Eq)
 
-instance Show (PrimeFieldElement p) where
-  show (PrimeFieldElement p) = show p
+instance KnownNat p => Show (PrimeFieldElement p) where
+  show (PrimeFieldElement x) = show x
 
 addInternal :: KnownNat p =>
                (PrimeFieldElement p) -> (PrimeFieldElement p) -> (PrimeFieldElement p)
@@ -50,23 +57,23 @@ instance KnownNat p => Algebra.Ring.C (PrimeFieldElement p) where
 instance KnownNat p => Algebra.Field.C (PrimeFieldElement p) where
   recip x = x ^ ((order x) - 1)
 
+instance KnownNat p => Algebra.ZeroTestable.C (PrimeFieldElement p) where
+  isZero px@(PrimeFieldElement x) = x `mod` (order px) == 0
 
--- GF(2) instance
-instance Show G2 where
-  show E0 = "0"
-  show E1 = "1"
 
-instance Algebra.Additive.C G2 where
-  zero = E0
-  (+) e0 e1 = if e0 == E0 then e1
-              else if e1 == E0 then e0
-                   else E0
-  negate = id
+pretty :: KnownNat p => MathObj.Polynomial.T (PrimeFieldElement p) -> String -> String
+pretty p var =
+  if isZero p then "0"
+  else foldr1 cat $ map pmono (Data.List.reverse $ filter (not . isZero . snd) $
+                                  zip (range (0, degp)) (coeffs p))
+  where cat s t = s ++ "+" ++ t
+        pmono (n, c) = if n == 0 then (show c)
+                       else if n == 1 then if c == one then var
+                                           else (show c)  ++ var
+                       else if c == one then var ++ "^" ++ (show n)
+                       else (show c) ++ var ++ "^" ++ (show n)
+        degp = fromMaybe 0 (degree p)
 
-instance Algebra.Ring.C G2 where
-  one = E1
-  (*) e0 e1 = if e0 == E0 then E0
-              else e1
 
-instance Algebra.Field.C G2 where
-  recip = id
+e :: KnownNat p => Integer -> PrimeFieldElement p
+e x = PrimeFieldElement x
