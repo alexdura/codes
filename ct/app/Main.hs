@@ -8,6 +8,8 @@ import Galois
 import Lib
 import System.IO
 
+import NumericPrelude
+
 import Algebra.Additive ((+))
 import Algebra.Ring ((*))
 import Algebra.IntegralDomain (mod)
@@ -54,6 +56,12 @@ m2 = fromRows 3 3 [[e 1, e 0, e 1], [e 0, e 1, e 1], [e 1, e 1, e 0]]
 
 em2 = echelon m2
 
+m3 :: MathObj.Matrix.T GF2
+m3 = fromRows 3 3 [[e 0, e 0, e 0], [e 0, e 0, e 0], [e 0, e 0, e 0]]
+
+m4 :: MathObj.Matrix.T Float
+m4 = fromRows 3 3 [[1.0, 2.0, 3.0], [1.0, 1.0, 1.0], [2.0, 1.0, 1.0]]
+
 main :: IO ()
 main = do {
   putStrLn ((show r) ++ " " ++ (show s));
@@ -61,8 +69,24 @@ main = do {
   putStrLn ((show p2));
   putStrLn ((show p4));
   putStrLn ( pretty p4 "X");
+
   putStrLn (format m1);
   putStrLn (format em1);
+  putStrLn (show $ det $ m1);
+
   putStrLn (format m2);
   putStrLn (format em2);
+  putStrLn (show $ det $ m2);
+
+  putStrLn (show (rank m2));
+  putStrLn (show (rank m1));
+
+  putStrLn (format $ echelon m3);
+  putStrLn (show $ rank m3);
+  putStrLn (show $ det m3);
+
+  putStrLn (format $ m4);
+  putStrLn (format $ echelon $ m4);
+  putStrLn (show $ rank m4);
+  putStrLn (show $ det m4);
   }
