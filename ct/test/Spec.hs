@@ -1,2 +1,9 @@
+import Test.Hspec
+
+import qualified MatrixExtrasSpec
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = hspec $ do {
+  MatrixExtrasSpec.tests;
+  -- GaloisSpec.tests;
+  }

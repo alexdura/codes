@@ -22,6 +22,8 @@ reorderRowsI repl (row0:rows) =
 -- element. Return true if any rows were swapped.
 reorderRows :: (Algebra.Additive.C a, Eq a) => [[a]] -> ([[a]], Bool)
 reorderRows [] = ([], False)
+reorderRows ([]:rows) = ([]:rows, False)
+reorderRows [row] = ([row], False)
 reorderRows (row0:rows) = if (head row0 /= Algebra.Additive.zero)
                           then (row0:rows, False)
                           else (snd (reorderRowsI row0 rows) :
@@ -32,7 +34,9 @@ mulRow s row = map ((*) s) row
 negRow row = map negate row
 addRow row0 row1 = map (\(x, y) -> x + y) (zip row0 row1)
 -- Subtract a row from a list of rows
-subtractRow r [] = ([], Algebra.Ring.one)
+subtractRow _ [] = ([], Algebra.Ring.one)
+subtractRow [] r = (r, Algebra.Ring.one)
+subtractRow _ ([]:rows) = ([]:rows, Algebra.Ring.one)
 subtractRow r (row:rows) =
   if pivot == Algebra.Additive.zero then ((row:rows), pivot)
   else if first == Algebra.Additive.zero
@@ -48,6 +52,9 @@ padLeft rows = map ((:) Algebra.Additive.zero) rows
 
 echelonR :: (Algebra.Field.C a, Eq a) => [[a]] -> ([[a]], a)
 echelonR [] = ([], Algebra.Ring.one)
+echelonR r@([_]:_) =
+  (fst rr, (if snd rr then negate else id) Algebra.Ring.one)
+  where rr = reorderRows r
 echelonR [row] = ([row], Algebra.Ring.one)
 echelonR rows =
   (row0 : (padLeft . fst . echelonR . dropLeft) (fst $ subtractRow row0 row1s),
@@ -72,6 +79,8 @@ rank :: (Algebra.Field.C a, Eq a) => MathObj.Matrix.T a -> Int
 rank mat = length $ filter (not . isAllZero) (rows $ echelon mat)
 
 diagI [] = []
+diagI [[]] = []
+diagI ([]:rows) = []
 diagI (row:rows) = (head row : (diagI . dropLeft) rows)
 
 diag :: MathObj.Matrix.T a -> [a]
