@@ -9,13 +9,23 @@ import PrimeField
 import MathObj.Polynomial
 import Number.ResidueClass.Check
 import GHC.TypeLits
+import Data.Maybe
+
+pretty :: KnownNat p => Number.ResidueClass.Check.T (MathObj.Polynomial.T (PrimeField.T p)) -> String -> String
+
+pretty p var = PrimeField.pretty (representative p) var
+
+gf :: KnownNat p => (MathObj.Polynomial.T (PrimeField.T p)) ->
+      (MathObj.Polynomial.T (PrimeField.T p)) ->
+      (Number.ResidueClass.Check.T (MathObj.Polynomial.T (PrimeField.T p)))
+
+gf mod p = Number.ResidueClass.Check.Cons mod p
 
 type GF2 = PrimeField.T 2
 type P2 = MathObj.Polynomial.T GF2
-
 gf4 :: [GF2] -> Number.ResidueClass.Check.T P2
-gf4 x = Number.ResidueClass.Check.Cons (fromCoeffs [e 1, e 1, e 1]) (fromCoeffs x)
+gf4 = (gf $ fromCoeffs [e 1, e 1, e 1]) . fromCoeffs
 
-pretty :: KnownNat p => Number.ResidueClass.Check.T (MathObj.Polynomial.T (PrimeField.T p)) -> String ->String
+elements :: KnownNat p => MathObj.Polynomial.T (PrimeField.T p) -> [Number.ResidueClass.Check.T (MathObj.Polynomial.T (PrimeField.T p))]
 
-pretty p var = PrimeField.pretty (representative p) var
+elements mod = map ((gf mod) . fromCoeffs) (sequence $ replicate (fromMaybe 0 (degree mod) - 1) PrimeField.elements)

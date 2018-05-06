@@ -40,6 +40,9 @@ c = fromColumns 3 1 [[e 0, e 1, e 0]]
 z :: MathObj.Matrix.T GF2
 z = fromColumns 1 1 [[e 0]]
 
+m5 :: MathObj.Matrix.T GF2
+m5 = fromColumns 2 1 [[e 1, e 1]]
+
 tests = describe "MatrixExtras tests" $ do
   it "Reduces a matrix to echelon form" $ do
     (echelon m1) `shouldBe` diagonal [e 1, e 1, e 1]
@@ -64,3 +67,9 @@ tests = describe "MatrixExtras tests" $ do
 
   it "Computes the rank of null 1 x 1 matrix" $ do
     (rank z) `shouldBe` 0
+
+  it "Computes the rank of [1, 1]t" $ do
+    (rank m5) `shouldBe` 1
+
+  it "Computes the rank of [1, 1]" $ do
+    (rank $ transpose m5) `shouldBe` 1

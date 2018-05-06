@@ -19,7 +19,7 @@ import Data.String
 import Data.List
 
 -- GF(p) instances
-data T (p :: Nat) where
+data T p where
   T :: Integer -> PrimeField.T (p :: Nat)
   deriving Eq
 
@@ -74,6 +74,8 @@ pretty p var =
                        else (show c) ++ var ++ "^" ++ (show n)
         degp = fromMaybe 0 (degree p)
 
-
 e :: KnownNat p => Integer -> PrimeField.T p
 e x = PrimeField.T x
+
+elements :: forall p . KnownNat p => [PrimeField.T p]
+elements = map e [0..(order (Algebra.Additive.zero :: PrimeField.T p)) - 1]

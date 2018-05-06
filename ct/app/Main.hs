@@ -25,8 +25,11 @@ import MatrixExtras
 
 import GHC.Stack
 
+import LinearCode
+
 type GF5 = PrimeField.T 5
 type GF2 = PrimeField.T 2
+type GF3 = PrimeField.T 3
 
 
 s3 :: GF5
@@ -68,6 +71,9 @@ m4 = fromRows 3 3 [[1.0, 2.0, 3.0], [1.0, 1.0, 1.0], [2.0, 1.0, 1.0]]
 c :: MathObj.Matrix.T GF2
 c = fromColumns 3 1 [[e 0, e 1, e 0]]
 
+g :: MathObj.Matrix.T GF3
+g = generator 4 3 2
+
 main :: IO ()
 main = do {
   putStrLn ((show r) ++ " " ++ (show s));
@@ -98,4 +104,6 @@ main = do {
 
   s <- whoCreated $ rank c;
   putStrLn $ renderStack s;
+
+  putStrLn $ (format g);
   }
