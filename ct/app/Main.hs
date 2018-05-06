@@ -4,7 +4,8 @@
 
 module Main where
 
-import Galois
+--import Galois
+import PrimeField
 import Lib
 import System.IO
 
@@ -22,26 +23,28 @@ import Prelude(show)
 
 import MatrixExtras
 
-type GF5 = Galois.PrimeFieldElement 5
-type GF2 = Galois.PrimeFieldElement 2
+import GHC.Stack
+
+type GF5 = PrimeField.T 5
+type GF2 = PrimeField.T 2
 
 
 s3 :: GF5
-s3 = Galois.PrimeFieldElement 4
+s3 = PrimeField.T 4
 s2 :: GF5
-s2 = Galois.PrimeFieldElement 1
+s2 = PrimeField.T 1
 r :: GF5
 r = s3 + s2
 s = s2 * s2
 
 p1 :: MathObj.Polynomial.T GF5
-p1 = fromCoeffs [Galois.PrimeFieldElement 1,
-                 Galois.PrimeFieldElement 2,
-                 Galois.PrimeFieldElement 3]
+p1 = fromCoeffs [PrimeField.T 1,
+                 PrimeField.T 2,
+                 PrimeField.T 3]
 
 p2 :: MathObj.Polynomial.T GF5
-p2 = fromCoeffs [Galois.PrimeFieldElement 1,
-                 Galois.PrimeFieldElement 2]
+p2 = fromCoeffs [PrimeField.T 1,
+                 PrimeField.T 2]
 
 p3 = p1 `mod` p2
 p4 = p1 * p2
@@ -61,6 +64,9 @@ m3 = fromRows 3 3 [[e 0, e 0, e 0], [e 0, e 0, e 0], [e 0, e 0, e 0]]
 
 m4 :: MathObj.Matrix.T Float
 m4 = fromRows 3 3 [[1.0, 2.0, 3.0], [1.0, 1.0, 1.0], [2.0, 1.0, 1.0]]
+
+c :: MathObj.Matrix.T GF2
+c = fromColumns 3 1 [[e 0, e 1, e 0]]
 
 main :: IO ()
 main = do {
@@ -89,4 +95,7 @@ main = do {
   putStrLn (format $ echelon $ m4);
   putStrLn (show $ rank m4);
   putStrLn (show $ det m4);
+
+  s <- whoCreated $ rank c;
+  putStrLn $ renderStack s;
   }

@@ -59,21 +59,3 @@ instance KnownNat p => Algebra.Field.C (PrimeFieldElement p) where
 
 instance KnownNat p => Algebra.ZeroTestable.C (PrimeFieldElement p) where
   isZero px@(PrimeFieldElement x) = x `mod` (order px) == 0
-
-
-pretty :: KnownNat p => MathObj.Polynomial.T (PrimeFieldElement p) -> String -> String
-pretty p var =
-  if isZero p then "0"
-  else foldr1 cat $ map pmono (Data.List.reverse $ filter (not . isZero . snd) $
-                                  zip (range (0, degp)) (coeffs p))
-  where cat s t = s ++ "+" ++ t
-        pmono (n, c) = if n == 0 then (show c)
-                       else if n == 1 then if c == one then var
-                                           else (show c)  ++ var
-                       else if c == one then var ++ "^" ++ (show n)
-                       else (show c) ++ var ++ "^" ++ (show n)
-        degp = fromMaybe 0 (degree p)
-
-
-e :: KnownNat p => Integer -> PrimeFieldElement p
-e x = PrimeFieldElement x

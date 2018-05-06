@@ -3,13 +3,12 @@
 module MatrixExtrasSpec (tests) where
 
 import Test.Hspec
-import Galois
+import PrimeField
 import NumericPrelude
 import MathObj.Matrix
 import MatrixExtras
 
-type GF2 = Galois.PrimeFieldElement 2
-
+type GF2 = PrimeField.T 2
 
 m1 :: MathObj.Matrix.T GF2
 m1 = fromRows 3 3 [[e 1, e 0, e 0],
