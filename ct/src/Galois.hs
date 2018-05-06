@@ -4,58 +4,18 @@
 
 module Galois where
 
-import Data.Proxy
-import GHC.TypeLits
 import NumericPrelude
-import Algebra.Field
-import Algebra.Additive
-import Algebra.Ring
-import Algebra.ZeroTestable
+import PrimeField
 import MathObj.Polynomial
-import Data.Maybe
-import Data.Ix
-import Data.Foldable
-import Data.String
-import Data.List
+import Number.ResidueClass.Check
+import GHC.TypeLits
 
--- GF(p) instances
-data PrimeFieldElement (p :: Nat) where
-  PrimeFieldElement :: Integer -> PrimeFieldElement (p :: Nat)
-  deriving Eq
+type GF2 = PrimeField.T 2
+type P2 = MathObj.Polynomial.T GF2
 
-order :: forall p . KnownNat p => (PrimeFieldElement p) -> Integer
-order _ = n
-  where
-    n :: Integer
-    n = natVal (Proxy :: Proxy p)
+gf4 :: [GF2] -> Number.ResidueClass.Check.T P2
+gf4 x = Number.ResidueClass.Check.Cons (fromCoeffs [e 1, e 1, e 1]) (fromCoeffs x)
 
-data G2 = E0
-        | E1
-        deriving (Eq)
+pretty :: KnownNat p => Number.ResidueClass.Check.T (MathObj.Polynomial.T (PrimeField.T p)) -> String ->String
 
-instance KnownNat p => Show (PrimeFieldElement p) where
-  show (PrimeFieldElement x) = show x
-
-addInternal :: KnownNat p =>
-               (PrimeFieldElement p) -> (PrimeFieldElement p) -> (PrimeFieldElement p)
-addInternal px@(PrimeFieldElement x) (PrimeFieldElement y) =
-  PrimeFieldElement ((x + y) `mod` (order px))
-
-negateInternal :: KnownNat p =>
-                  (PrimeFieldElement p) -> (PrimeFieldElement p)
-negateInternal px@(PrimeFieldElement x) = PrimeFieldElement ((order px) - x)
-
-instance KnownNat p => Algebra.Additive.C (PrimeFieldElement p) where
-  zero = (PrimeFieldElement 0)
-  (+) = addInternal
-  negate = negateInternal
-
-instance KnownNat p => Algebra.Ring.C (PrimeFieldElement p) where
-  one = (PrimeFieldElement 1)
-  (*) px@(PrimeFieldElement x) (PrimeFieldElement y) = PrimeFieldElement ((x * y) `mod` (order px))
-
-instance KnownNat p => Algebra.Field.C (PrimeFieldElement p) where
-  recip x = x ^ ((order x) - 1)
-
-instance KnownNat p => Algebra.ZeroTestable.C (PrimeFieldElement p) where
-  isZero px@(PrimeFieldElement x) = x `mod` (order px) == 0
+pretty p var = PrimeField.pretty (representative p) var
