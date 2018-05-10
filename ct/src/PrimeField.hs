@@ -79,3 +79,10 @@ e x = PrimeField.T x
 
 elements :: forall p . KnownNat p => [PrimeField.T p]
 elements = map e [0..(order (Algebra.Additive.zero :: PrimeField.T p)) - 1]
+
+class Enumerable a where
+  enumerate :: [a]
+
+
+instance KnownNat p => Enumerable (PrimeField.T p) where
+  enumerate = elements

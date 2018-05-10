@@ -9,6 +9,7 @@ import MathObj.Matrix
 import MatrixExtras
 
 type GF2 = PrimeField.T 2
+type GF5 = PrimeField.T 5
 
 m1 :: MathObj.Matrix.T GF2
 m1 = fromRows 3 3 [[e 1, e 0, e 0],
@@ -43,7 +44,30 @@ z = fromColumns 1 1 [[e 0]]
 m5 :: MathObj.Matrix.T GF2
 m5 = fromColumns 2 1 [[e 1, e 1]]
 
+m6 :: MathObj.Matrix.T GF5
+m6 = fromRows 3 2 [[e 1, e 1], [e 2, e 2], [e 3, e 3]]
+
 tests = describe "MatrixExtras tests" $ do
+  it "Internal: swaps two rows" $ do
+    apply (Swap 0 2) m6 `shouldBe` fromRows 3 2 [[e 3, e 3], [e 2, e 2], [e 1, e 1]]
+
+  it "Internal: swaps a row with itself" $ do
+    apply (Swap 2 2) m6 `shouldBe` m6
+
+  it "Internal: multiplies one row" $ do
+    apply (Mul 1  (e 2)) m6 `shouldBe`
+      fromRows 3 2 [[e 1, e 1], [e 4, e 4], [e 3, e 3]]
+
+  it "Internal: multiplies one row and adds it to another" $ do
+    apply (Add 0 2 (e 2)) m6 `shouldBe`
+      fromRows 3 2 [[e 1, e 1], [e 2, e 2], [e 0, e 0]]
+
+  it "Gaussian reduction" $ do
+    gauss m6 `shouldBe` fromRows 3 2 [[e 1, e 1], [e 0, e 0], [e 0, e 0]]
+
+  it "Gaussian reduction of zero" $
+    gauss m3 `shouldBe` m3
+
   it "Reduces a matrix to echelon form" $ do
     (echelon m1) `shouldBe` diagonal [e 1, e 1, e 1]
 

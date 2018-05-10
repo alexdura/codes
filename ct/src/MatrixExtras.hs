@@ -7,7 +7,9 @@ import Algebra.Field
 import Algebra.Ring
 import Algebra.Additive
 import MathObj.Matrix
+import Algebra.ZeroTestable
 import Data.List
+import Data.Maybe
 
 reorderRowsI :: (Algebra.Additive.C a, Eq a) => [a] -> [[a]] -> ([[a]], [a])
 reorderRowsI repl [row0] = if (head row0 /= Algebra.Additive.zero) then ([repl], row0)
@@ -52,9 +54,9 @@ padLeft rows = map ((:) Algebra.Additive.zero) rows
 
 echelonR :: (Algebra.Field.C a, Eq a) => [[a]] -> ([[a]], a)
 echelonR [] = ([], Algebra.Ring.one)
-echelonR r@([_]:_) =
-  (fst rr, (if snd rr then negate else id) Algebra.Ring.one)
-  where rr = reorderRows r
+-- echelonR r@([_]:_) =
+--   (fst rr, (if snd rr then negate else id) Algebra.Ring.one)
+--   where rr = reorderRows r
 echelonR [row] = ([row], Algebra.Ring.one)
 echelonR rows =
   (row0 : (padLeft . fst . echelonR . dropLeft) (fst $ subtractRow row0 row1s),
@@ -71,24 +73,109 @@ echelon mat = ((fromRows m n) . fst . echelonR . rows) mat
   where m = fst $ dimension mat
         n = snd $ dimension mat
 
-isAllZero :: (Algebra.Field.C a, Eq a) => [a] -> Bool
+isAllZero :: (Algebra.Field.C a, Algebra.ZeroTestable.C a) => [a] -> Bool
 isAllZero [] = True
-isAllZero (x:xs) = (x == Algebra.Additive.zero) && (isAllZero xs)
+isAllZero (x:xs) = (isZero x) && (isAllZero xs)
 
-rank :: (Algebra.Field.C a, Eq a) => MathObj.Matrix.T a -> Int
-rank mat = length $ filter (not . isAllZero) (rows $ echelon mat)
+rank :: (Algebra.Field.C a, Algebra.ZeroTestable.C a) => MathObj.Matrix.T a -> Int
+rank mat = length $ filter (not . isAllZero) (rows $ gauss mat)
 
-diagI [] = []
-diagI [[]] = []
-diagI ([]:rows) = []
-diagI (row:rows) = (head row : (diagI . dropLeft) rows)
+
+data Action a = Swap Int Int -- swap two rows
+              | Add Int Int a -- add first row x a to the second row
+              | Mul Int a -- multiply row with a
+              | MoveRight -- move from position (i, j) to (i, j+1)
+              deriving (Eq, Show)
+
+trySwap :: (Algebra.Field.C a, Algebra.ZeroTestable.C a) => Dimension -> Dimension -> MathObj.Matrix.T a -> [Action a]
+trySwap i j mat =
+  let
+    (m, n) = dimension mat
+    nonZeroIdx = fromMaybe m $ find (\k -> (not . isZero) (index mat k j)) [i..m-1]
+  in
+   if nonZeroIdx == i then tryScale i j mat
+   else if nonZeroIdx == m then [MoveRight]
+        else [Swap i nonZeroIdx]
+
+
+tryScale :: (Algebra.Field.C a, Algebra.ZeroTestable.C a) => Dimension -> Dimension -> MathObj.Matrix.T a -> [Action a]
+tryScale i j mat =
+  if (not . isZero) ((index mat i j) - Algebra.Ring.one)
+  then [Mul i (recip $ index mat i j)]
+  else tryAdd i j mat
+
+tryAdd :: (Algebra.Field.C a, Algebra.ZeroTestable.C a) => Dimension -> Dimension -> MathObj.Matrix.T a -> [Action a]
+tryAdd i j mat =
+  concat $ map action [k | k <- [0..(m-1)], k /= i]
+  where
+    (m, n) = dimension mat
+    action k = if (not . isZero) (index mat k j)
+               then [Add i k (Algebra.Additive.negate $ index mat k j)]
+               else []
+
+replaceAt :: Int -> a -> [a] -> [a]
+replaceAt _ _ [] = []
+replaceAt 0 y (x:xs) = (y:xs)
+replaceAt n y (x:xs) = (x : (replaceAt (n-1) y xs))
+
+apply :: Algebra.Field.C a => Action a -> MathObj.Matrix.T a -> MathObj.Matrix.T a
+apply (Swap i j) mat = ((fromRows m n) . (replaceAt i cj) . (replaceAt j ci)) r
+  where
+    (m, n) = dimension mat
+    r = rows mat
+    ci = r !! i
+    cj = r !! j
+
+apply (Add i j x) mat = (fromRows m n) . (replaceAt j new_cj) . rows $ mat
+  where
+    (m, n) = dimension mat
+    cj = (rows mat) !! j
+    ci = (rows mat) !! i
+    new_cj = map (\(a, b) -> (a * x + b)) (zip ci cj)
+
+apply (Mul i x) mat = (fromRows m n) . (replaceAt i ci) . rows $ mat
+  where
+    (m, n) = dimension mat
+    ci = map ((*) x) ((rows mat) !! i)
+
+gaussI :: (Algebra.Field.C a, Algebra.ZeroTestable.C a) => Dimension -> Dimension -> MathObj.Matrix.T a -> ([Action a], MathObj.Matrix.T a)
+gaussI i j mat =
+  let (m, n) = dimension mat
+      actions = trySwap i j mat
+      tmat = foldl (\m -> \a -> apply a m) mat actions
+  in
+   if (i >= m || j >= n) then ([], mat)
+   else case actions of
+         [MoveRight] -> gaussI i (j + 1) mat
+         [] -> gaussI (i + 1) (j + 1) mat
+         otherwise -> (actions ++ fst g, snd g)
+           where g = gaussI i j tmat
+
+gauss :: (Algebra.Field.C a, Algebra.ZeroTestable.C a) => MathObj.Matrix.T a -> MathObj.Matrix.T a
+gauss mat = snd $ gaussI 0 0 mat
+
+detI :: (Algebra.Field.C a, Algebra.ZeroTestable.C a) => [Action a] -> a
+detI [] = Algebra.Ring.one
+detI (a:as) = case a of
+  (Mul _ x) -> (recip x) * (detI as)
+  (Add _ _ x) -> --(recip x) *
+    (detI as)
+  (Swap _ _) -> (negate Algebra.Ring.one) * (detI as)
+
+
+diagI :: Dimension -> Dimension -> MathObj.Matrix.T a  -> [a]
+diagI i j mat =
+  if (i >= m || j >= n) then []
+  else (index mat i j):(diagI (i + 1) (j + 1) mat)
+  where
+    (m, n) = dimension mat
 
 diag :: MathObj.Matrix.T a -> [a]
-diag = diagI . rows
+diag = diagI 0 0
 
-det :: (Algebra.Field.C a, Eq a) => MathObj.Matrix.T a -> a
+det :: (Algebra.Field.C a, Algebra.ZeroTestable.C a) => MathObj.Matrix.T a -> a
 det mat = if m /= n then Algebra.Additive.zero
-          else (snd ech) * (foldl (*) Algebra.Ring.one  (diagI $ fst ech))
+          else (detI actions) * (foldl (*) Algebra.Ring.one  (diag g))
   where m = fst $ dimension mat
         n = snd $ dimension mat
-        ech = echelonR $ rows mat
+        (actions, g) = gaussI 0 0 mat
