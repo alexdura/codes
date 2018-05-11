@@ -23,7 +23,7 @@ m1 :: MathObj.Matrix.T (PrimeField.T 2)
 m1 = fromColumns 2 3 [[e 1, e 0], [e 0, e 1], [e 1, e 1]]
 
 tests = describe "Linear codes tests" $ do
-  it "Compute all matrices of strenght t" $ do
+  it "Counts all 3x7 matrices of strenght 2" $ do
     length s1 `shouldBe` 1
 
   it "Verifies that I2 has strength 2" $ do
@@ -33,4 +33,7 @@ tests = describe "Linear codes tests" $ do
     hasStrength 1 m1 `shouldBe` True
 
   it "Computes a generator for a Hamming (7, 4, 3) code" $ do
-    (gauss g2) `shouldBe` MathObj.Matrix.zero 4 4
+    (gauss g2) `shouldBe` (fmap e $ MathObj.Matrix.fromRows 4 7 [[1,0,0,0,0,1,1],
+                                                                 [0,1,0,0,1,0,1],
+                                                                 [0,0,1,0,1,1,0],
+                                                                 [0,0,0,1,1,1,1]])

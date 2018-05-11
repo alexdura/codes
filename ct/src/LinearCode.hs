@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module LinearCode where
+module LinearCode(check, generator, strength, hasStrength) where
 
 import NumericPrelude
 import Algebra.ZeroTestable

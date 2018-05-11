@@ -7,8 +7,12 @@ import PrimeField
 import Galois
 import NumericPrelude
 import MathObj.Matrix
+import MathObj.Polynomial
 
 -- 0
+
+gf4 :: [PrimeField.T 2] -> Galois.T 2 2
+gf4 = (fromPolynomial . fromCoeffs)
 e0 = gf4 $ (map e) [0, 0]
 -- 1
 e1 = gf4 $ (map e) [1, 0]
