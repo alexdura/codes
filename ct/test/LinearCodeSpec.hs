@@ -4,7 +4,7 @@ module LinearCodeSpec (tests) where
 
 import Test.Hspec
 import PrimeField
-import Galois
+import GaloisField
 import NumericPrelude
 import MathObj.Matrix
 import LinearCode

@@ -4,7 +4,7 @@ module RSCodeSpec (tests) where
 
 import Test.Hspec
 import PrimeField
-import Galois
+import GaloisField
 import NumericPrelude
 import MathObj.Matrix
 import RSCode
@@ -12,8 +12,8 @@ import MatrixExtras
 import MathObj.Polynomial
 import Algebra.ZeroTestable
 
-g2 = generator 2 :: MathObj.Matrix.T (Galois.T 2 2)
-c2 = check 2  :: MathObj.Matrix.T (Galois.T 2 2)
+g2 = generator 2 :: MathObj.Matrix.T (GaloisField.T 2 2)
+c2 = check 2  :: MathObj.Matrix.T (GaloisField.T 2 2)
 type P p = MathObj.Polynomial.T (PrimeField.T p)
 
 isAllZeros m = all isZero $ (concat . columns) m

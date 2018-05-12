@@ -1,17 +1,17 @@
 {-# LANGUAGE NoImplicitPrelude, DataKinds #-}
 
-module GaloisSpec (tests) where
+module GaloisFieldSpec (tests) where
 
 import Test.Hspec
 import PrimeField
-import Galois
+import GaloisField
 import NumericPrelude
 import MathObj.Matrix
 import MathObj.Polynomial
 
 -- 0
 
-gf4 :: [PrimeField.T 2] -> Galois.T 2 2
+gf4 :: [PrimeField.T 2] -> GaloisField.T 2 2
 gf4 = (fromPolynomial . fromCoeffs)
 e0 = gf4 $ (map e) [0, 0]
 -- 1

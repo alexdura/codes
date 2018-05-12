@@ -2,7 +2,7 @@
 {-# LANGUAGE RankNTypes, GADTs, TypeOperators, DataKinds, KindSignatures, ScopedTypeVariables, TypeApplications, InstanceSigs  #-}
 {-# OPTIONS_GHC -fplugin GHC.TypeLits.Normalise #-}
 
-module Galois where
+module GaloisField where
 
 import NumericPrelude
 import PrimeField
@@ -30,62 +30,56 @@ irreducible n =
 
 data T p n where
   Cons :: (MathObj.Polynomial.T (PrimeField.T p)) ->
-          (MathObj.Polynomial.T (PrimeField.T p)) -> Galois.T (p :: Nat) (n :: Nat)
+          (MathObj.Polynomial.T (PrimeField.T p)) -> GaloisField.T (p :: Nat) (n :: Nat)
 
-representative (Galois.Cons _ p) = p
+representative (GaloisField.Cons _ p) = p
 
-degree :: forall p n  . KnownNat p => KnownNat n => Proxy (Galois.T p n) -> Integer
+degree :: forall p n  . KnownNat p => KnownNat n => Proxy (GaloisField.T p n) -> Integer
 degree _ = natVal (Proxy :: Proxy n)
 
-degree' :: forall p n . KnownNat p => KnownNat n => (Galois.T p n) -> Integer
-degree' _ = n'
-  where n' = natVal (Proxy :: Proxy n)
-
-order' :: forall p n . KnownNat p => KnownNat n => (Galois.T p n) -> Integer
-order' _ = p'
-  where p' = natVal (Proxy :: Proxy p)
-
-order :: forall p n . KnownNat p => KnownNat n => (Galois.T p n) -> Integer
-order x = (order' x) ^ (degree' x)
+order :: forall p n . KnownNat p => KnownNat n => Proxy (GaloisField.T p n) -> Integer
+order _ = p'^n' where
+  p' = natVal (Proxy :: Proxy p)
+  n' = natVal (Proxy :: Proxy n)
 ---------------------------------------------------------
 -- Smart constructor
 fromPolynomial :: forall p n . KnownNat p => KnownNat n =>
-                  MathObj.Polynomial.T (PrimeField.T p) -> (Galois.T p n)
+                  MathObj.Polynomial.T (PrimeField.T p) -> (GaloisField.T p n)
 
-fromPolynomial pol = Galois.Cons m (pol `mod` m)
+fromPolynomial pol = GaloisField.Cons m (pol `mod` m)
   where n' = natVal (Proxy :: Proxy n)
         m = head $ irreducible (NumericPrelude.fromInteger n')
 
-modulus :: forall p n . KnownNat p => KnownNat n => Proxy (Galois.T p n) -> MathObj.Polynomial.T (PrimeField.T p)
+modulus :: forall p n . KnownNat p => KnownNat n => Proxy (GaloisField.T p n) -> MathObj.Polynomial.T (PrimeField.T p)
 modulus _ = head $ irreducible (NumericPrelude.fromInteger (natVal (Proxy :: Proxy n)))
 
 -- Instances
-instance (KnownNat p, KnownNat n) => Algebra.Additive.C (Galois.T p n) where
+instance (KnownNat p, KnownNat n) => Algebra.Additive.C (GaloisField.T p n) where
   zero = fromPolynomial Algebra.Additive.zero
-  (+) (Galois.Cons _ p) (Galois.Cons _ q) = fromPolynomial (p + q)
-  negate (Galois.Cons _ p) = fromPolynomial (negate p)
+  (+) (GaloisField.Cons _ p) (GaloisField.Cons _ q) = fromPolynomial (p + q)
+  negate (GaloisField.Cons _ p) = fromPolynomial (negate p)
 
-instance (KnownNat p, KnownNat n) => Algebra.Ring.C (Galois.T p n) where
+instance (KnownNat p, KnownNat n) => Algebra.Ring.C (GaloisField.T p n) where
   one = fromPolynomial Algebra.Ring.one
-  (*) (Galois.Cons _ p) (Galois.Cons r q) = fromPolynomial ((p * q) `mod` r)
+  (*) (GaloisField.Cons _ p) (GaloisField.Cons r q) = fromPolynomial ((p * q) `mod` r)
 
-instance (KnownNat p, KnownNat n) => Algebra.Field.C (Galois.T p n) where
-  recip x = x ^ ((Galois.order x) - 1)
+instance (KnownNat p, KnownNat n) => Algebra.Field.C (GaloisField.T p n) where
+  recip x = x ^ ((GaloisField.order (Proxy::Proxy (GaloisField.T p n))) - 1)
 
-instance (KnownNat p, KnownNat n) => Show (Galois.T p n) where
+instance (KnownNat p, KnownNat n) => Show (GaloisField.T p n) where
   show (Cons m p) = "[" ++ show p ++ "/" ++ show m ++ "]"
 
-instance (KnownNat p, KnownNat n) => Eq (Galois.T p n) where
+instance (KnownNat p, KnownNat n) => Eq (GaloisField.T p n) where
   (Cons _ p) == (Cons _ q) = p == q
 
-instance (KnownNat p, KnownNat n) => Algebra.ZeroTestable.C (Galois.T p n) where
+instance (KnownNat p, KnownNat n) => Algebra.ZeroTestable.C (GaloisField.T p n) where
   isZero (Cons _ p) = isZero p
 
-pretty :: (KnownNat p, KnownNat n) => (Galois.T p n) -> String -> String
+pretty :: (KnownNat p, KnownNat n) => (GaloisField.T p n) -> String -> String
 
-pretty p var = PrimeField.pretty (Galois.representative p) var
+pretty p var = PrimeField.pretty (GaloisField.representative p) var
 
-elements :: forall p n . KnownNat p => KnownNat n => [Galois.T p n]
+elements :: forall p n . KnownNat p => KnownNat n => [GaloisField.T p n]
 elements =
   map (fromPolynomial . fromCoeffs) (sequence $ replicate deg PrimeField.elements)
   where deg = (NumericPrelude.fromInteger $ (natVal (Proxy :: Proxy n))) :: Int
