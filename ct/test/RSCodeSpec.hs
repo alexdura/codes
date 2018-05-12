@@ -19,7 +19,7 @@ type P p = MathObj.Polynomial.T (PrimeField.T p)
 isAllZeros m = all isZero $ (concat . columns) m
 
 tests = describe "RS codes tests" $ do
-  it "Lists all irreducile polynomials of degree 1 over GF(3)" $ do
+  it "Lists all irreducible polynomials of degree 1 over GF(3)" $ do
     (irreducible 1 :: [P 3]) `shouldBe` [
       fromCoeffs $ map e [0,1],
       fromCoeffs $ map e [1,1],

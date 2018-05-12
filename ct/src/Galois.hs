@@ -34,29 +34,29 @@ data T p n where
 
 representative (Galois.Cons _ p) = p
 
-degree :: forall n . (KnownNat n) => forall p . (KnownNat p) => Proxy (Galois.T p n) -> Integer
+degree :: forall p n  . KnownNat p => KnownNat n => Proxy (Galois.T p n) -> Integer
 degree _ = natVal (Proxy :: Proxy n)
 
-degree' :: forall n . (KnownNat n) => forall p . (KnownNat p) => (Galois.T p n) -> Integer
+degree' :: forall p n . KnownNat p => KnownNat n => (Galois.T p n) -> Integer
 degree' _ = n'
   where n' = natVal (Proxy :: Proxy n)
 
-order' :: forall p . (KnownNat p) => forall n . (KnownNat n) => (Galois.T p n) -> Integer
+order' :: forall p n . KnownNat p => KnownNat n => (Galois.T p n) -> Integer
 order' _ = p'
   where p' = natVal (Proxy :: Proxy p)
 
-order :: forall p . (KnownNat p) => forall n . (KnownNat n) => (Galois.T p n) -> Integer
+order :: forall p n . KnownNat p => KnownNat n => (Galois.T p n) -> Integer
 order x = (order' x) ^ (degree' x)
 ---------------------------------------------------------
 -- Smart constructor
-fromPolynomial :: forall n . (KnownNat n) => forall p . (KnownNat p) =>
+fromPolynomial :: forall p n . KnownNat p => KnownNat n =>
                   MathObj.Polynomial.T (PrimeField.T p) -> (Galois.T p n)
 
 fromPolynomial pol = Galois.Cons m (pol `mod` m)
   where n' = natVal (Proxy :: Proxy n)
         m = head $ irreducible (NumericPrelude.fromInteger n')
 
-modulus :: forall n . (KnownNat n) => forall p . (KnownNat p) => Proxy (Galois.T p n) -> MathObj.Polynomial.T (PrimeField.T p)
+modulus :: forall p n . KnownNat p => KnownNat n => Proxy (Galois.T p n) -> MathObj.Polynomial.T (PrimeField.T p)
 modulus _ = head $ irreducible (NumericPrelude.fromInteger (natVal (Proxy :: Proxy n)))
 
 -- Instances
@@ -85,7 +85,7 @@ pretty :: (KnownNat p, KnownNat n) => (Galois.T p n) -> String -> String
 
 pretty p var = PrimeField.pretty (Galois.representative p) var
 
-elements :: forall n . KnownNat n => forall p . KnownNat p => [Galois.T p n]
+elements :: forall p n . KnownNat p => KnownNat n => [Galois.T p n]
 elements =
   map (fromPolynomial . fromCoeffs) (sequence $ replicate deg PrimeField.elements)
   where deg = (NumericPrelude.fromInteger $ (natVal (Proxy :: Proxy n))) :: Int
